@@ -52,6 +52,9 @@ const studyData = [
     let timeLimitSetting = 0;
     let timerInterval = null;
     let waitingForNext = false;
+    let structureOnly = false;
+    let initialQuestionCount = 0;
+    let wrongAnswersList = [];
 
     renderList();
 
@@ -148,8 +151,12 @@ const studyData = [
     function toggleAccordion(header) {
         header.classList.toggle('active');
         const content = header.nextElementSibling;
-        if (content.style.maxHeight) content.style.maxHeight = null;
-        else content.style.maxHeight = content.scrollHeight + "px";
+        if (!content) return;
+        if (content.style.maxHeight) {
+            content.style.maxHeight = null;
+        } else {
+            content.style.maxHeight = content.scrollHeight + "px";
+        }
     }
 
     function renderCard() {
@@ -202,6 +209,18 @@ const studyData = [
         if (cardIndex > 0) { cardIndex--; renderCard(); }
     }
 
+    function toggleStructureOptionVisibility() {
+        const structureOption = document.getElementById('structure-only-option');
+        const tzaimCheckbox = document.querySelector('input[value="IV. 짜임"]');
+        if (tzaimCheckbox && tzaimCheckbox.checked) {
+            structureOption.style.display = 'block';
+        } else {
+            structureOption.style.display = 'none';
+            const structureOnlyCheckbox = document.getElementById('structure-only-checkbox');
+            if(structureOnlyCheckbox) structureOnlyCheckbox.checked = false;
+        }
+    }
+
     function initQuizSetup() {
         const content = document.getElementById('app-content');
         const categories = [...new Set(studyData.map(item => item.cat))];
@@ -213,11 +232,17 @@ const studyData = [
                         <label>학습할 단원을 선택하세요.</label>`;
         categories.forEach(cat => {
             html += `<label class="checkbox-container">${cat}
-                        <input type="checkbox" id="cat-${cat}" name="category" value="${cat}" checked>
+                        <input type="checkbox" id="cat-${cat}" name="category" value="${cat}" onchange="toggleStructureOptionVisibility()" checked>
                         <span class="checkmark"></span>
                     </label>`;
         });
         html += `
+                    </div>
+                    <div class="setup-group" id="structure-only-option" style="display: none;">
+                        <label class="checkbox-container" style="font-size:0.9rem">짜임만 보기 (IV. 짜임 전용)
+                            <input type="checkbox" id="structure-only-checkbox">
+                            <span class="checkmark"></span>
+                        </label>
                     </div>
                     <div class="setup-group">
                         <label>문제 유형</label>
@@ -239,6 +264,7 @@ const studyData = [
                 </div>
             </div>`;
         content.innerHTML = html;
+        toggleStructureOptionVisibility();
     }
 
     function startRealQuiz() {
@@ -252,13 +278,23 @@ const studyData = [
 
         const typeSelect = document.getElementById('setup-type');
         const timeSelect = document.getElementById('setup-time');
+        const structureOnlyCheckbox = document.getElementById('structure-only-checkbox');
+        
         quizType = typeSelect.value;
         timeLimitSetting = parseInt(timeSelect.value, 10);
+        structureOnly = structureOnlyCheckbox && structureOnlyCheckbox.checked;
         
-        quizScore = 0;
         shuffledData = [...filteredData].sort(() => Math.random() - 0.5);
+        initialQuestionCount = shuffledData.length;
+        wrongAnswersList = [];
+        quizScore = 0;
         cardIndex = 0;
         renderQuiz();
+    }
+
+    function getStructure(text) {
+        const match = text.match(/\(([^)]+)\)/);
+        return match ? match[1] : text;
     }
 
     function renderQuiz() {
@@ -266,14 +302,35 @@ const studyData = [
         const content = document.getElementById('app-content');
         
         if (cardIndex >= shuffledData.length) {
-            content.innerHTML = `
+            quizScore = initialQuestionCount - wrongAnswersList.length;
+            let resultHTML = `
                 <div class="quiz-container">
                     <div class="quiz-setup" style="text-align:center;">
                         <h2 style="margin-bottom:10px;">학습 종료!</h2>
-                        <p style="font-size:2.5rem; font-weight:700; color:var(--primary-color); margin:20px 0;">${quizScore} / ${shuffledData.length}</p>
+                        <p style="font-size:2.5rem; font-weight:700; color:var(--primary-color); margin:20px 0;">${quizScore} / ${initialQuestionCount}</p>
                         <button class="btn" onclick="initQuizSetup()">처음으로</button>
-                    </div>
-                </div>`;
+                    </div>`;
+
+            if (wrongAnswersList.length > 0) {
+                resultHTML += `
+                    <div class="list-container" style="margin-top: 30px;">
+                        <div class="accordion-item">
+                            <div class="accordion-header" onclick="toggleAccordion(this)">
+                                틀린 문제 (${wrongAnswersList.length}개)
+                            </div>
+                            <div class="accordion-content">
+                                <div class="word-grid">`;
+                wrongAnswersList.forEach(item => {
+                    resultHTML += `
+                        <div class="word-item">
+                            <span class="hanja-text">${item.q}</span>
+                            <span class="meaning-text">${item.a}</span>
+                        </div>`;
+                });
+                resultHTML += `</div></div></div></div>`;
+            }
+            resultHTML += `</div>`;
+            content.innerHTML = resultHTML;
             return;
         }
 
@@ -281,9 +338,13 @@ const studyData = [
         let questionText, answerText, correctValue;
         
         if (quizType === 'hanjaToMeaning') {
-            questionText = item.q; answerText = item.a; correctValue = item.a;
+            questionText = item.q; 
+            answerText = item.a; 
+            correctValue = (structureOnly && item.cat === "IV. 짜임") ? getStructure(item.a) : item.a;
         } else {
-            questionText = item.a; answerText = item.q; correctValue = item.q;
+            questionText = item.a; 
+            answerText = item.q; 
+            correctValue = item.q;
         }
 
         const sameCatItems = studyData.filter(d => d.cat === item.cat && d.q !== item.q);
@@ -295,10 +356,28 @@ const studyData = [
             wrongCandidates = [...wrongCandidates, ...moreWrong];
         }
         
-        const wrongAnswers = wrongCandidates.map(d => quizType === 'hanjaToMeaning' ? d.a : d.q);
-        const options = [...wrongAnswers, correctValue].sort(() => Math.random() - 0.5);
+        let wrongAnswersOptions;
+        if (quizType === 'hanjaToMeaning') {
+            wrongAnswersOptions = wrongCandidates.map(d => (structureOnly && d.cat === "IV. 짜임") ? getStructure(d.a) : d.a);
+        } else {
+            wrongAnswersOptions = wrongCandidates.map(d => d.q);
+        }
+        
+        const tempOptions = [...new Set([...wrongAnswersOptions, correctValue])];
+        while (tempOptions.length < 4 && studyData.length > tempOptions.length) {
+             const randomItem = studyData[Math.floor(Math.random() * studyData.length)];
+             let randomOption;
+             if (quizType === 'hanjaToMeaning') {
+                randomOption = (structureOnly && randomItem.cat === "IV. 짜임") ? getStructure(randomItem.a) : randomItem.a;
+             } else {
+                randomOption = randomItem.q;
+             }
+             if (!tempOptions.includes(randomOption)) {
+                 tempOptions.push(randomOption);
+             }
+        }
+        const options = tempOptions.sort(() => Math.random() - 0.5);
 
-        // Timer HTML
         let timerHtml = '';
         if (timeLimitSetting > 0) {
             timerHtml = `
@@ -324,16 +403,16 @@ const studyData = [
                 <div class="options-grid">`;
 
         options.forEach(opt => {
-            html += `<button class="option-btn" onclick="checkAnswer(this, '${correctValue}', '${opt}')">${opt}</button>`;
+            html += `<button class="option-btn" onclick="checkAnswer(this, '${correctValue}', '${opt}', '${answerText.replace(/'/g, "\\'")}')">${opt}</button>`;
         });
 
         html += `</div></div>`;
         content.innerHTML = html;
 
-        if (timeLimitSetting > 0) startTimer(correctValue);
+        if (timeLimitSetting > 0) startTimer(correctValue, answerText);
     }
 
-    function startTimer(correctAnswer) {
+    function startTimer(correctAnswer, fullAnswer) {
         let timeLeft = timeLimitSetting;
         const bar = document.getElementById('timer-bar');
         const text = document.getElementById('timer-text');
@@ -350,12 +429,12 @@ const studyData = [
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
                 if (bar) bar.style.width = "0%";
-                checkAnswer(null, correctAnswer, null);
+                checkAnswer(null, correctAnswer, null, fullAnswer);
             }
         }, 1000);
     }
 
-    function checkAnswer(btn, correct, selected) {
+    function checkAnswer(btn, correct, selected, fullAnswer) {
         if (waitingForNext) return;
         if (timerInterval) clearInterval(timerInterval);
 
@@ -363,27 +442,41 @@ const studyData = [
         const answerDisplay = document.getElementById('quiz-answer-text');
         const questionBox = document.getElementById('question-box');
         const continueMsg = document.getElementById('continue-msg');
-        
+        const currentItem = shuffledData[cardIndex];
+
         buttons.forEach(b => b.disabled = true);
         answerDisplay.classList.add('show');
 
-        if (btn && correct === selected) {
-            // Correct
+        let isCorrect = selected === correct;
+        if (structureOnly && currentItem.cat === 'IV. 짜임' && quizType === 'hanjaToMeaning') {
+             isCorrect = getStructure(fullAnswer) === selected;
+        }
+
+        if (btn && isCorrect) {
             btn.classList.add('correct');
-            questionBox.classList.add('box-correct'); // Green Box
-            quizScore++;
+            questionBox.classList.add('box-correct');
+            
             setTimeout(() => {
                 cardIndex++;
                 renderQuiz();
             }, 700);
         } else {
-            // Wrong
             waitingForNext = true;
             if (btn) btn.classList.add('wrong');
-            questionBox.classList.add('box-wrong'); // Red Box
+            questionBox.classList.add('box-wrong');
             
+            if (!wrongAnswersList.some(item => item.q === currentItem.q)) {
+                wrongAnswersList.push(currentItem);
+            }
+            
+            shuffledData.push(currentItem);
+
             buttons.forEach(b => {
-                if (b.innerText === correct) b.classList.add('correct');
+                 let correctOptionText = correct;
+                 if (structureOnly && currentItem.cat === 'IV. 짜임' && quizType === 'hanjaToMeaning') {
+                     correctOptionText = getStructure(fullAnswer);
+                 }
+                if (b.innerText === correctOptionText) b.classList.add('correct');
             });
 
             continueMsg.style.display = 'block';
