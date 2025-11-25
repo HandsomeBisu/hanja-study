@@ -33,6 +33,72 @@
             line-height: 1.6;
         }
 
+        /* Intro Styles */
+        #intro-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column; /* Changed to column */
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease-in-out, visibility 0.8s;
+        }
+
+        #intro-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        #intro-logo {
+            max-width: 150px;
+            animation: logo-fade-in 2.5s ease-out forwards;
+        }
+
+        #intro-text { /* New style for intro text */
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-top: 20px;
+            opacity: 0;
+            animation: text-fade-in 2.5s ease-out forwards;
+            animation-delay: 1s; /* Delay text appearance */
+        }
+
+        @keyframes text-fade-in {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes logo-fade-in {
+            0% {
+                filter: blur(15px);
+                transform: scale(1.2);
+                opacity: 0;
+            }
+            40% {
+                filter: blur(0px);
+                transform: scale(1);
+                opacity: 1;
+            }
+            80% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+
         header {
             background-color: var(--bg-color);
             border-bottom: 1px solid var(--border-color);
@@ -211,7 +277,7 @@
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .option-btn {
             background: white; border: 1px solid var(--border-color); border-radius: 8px;
-            padding: 16px; font-size: 1.1rem; cursor: pointer; transition: all 0.2s;
+            padding: 16px; font-size: 1.5rem; cursor: pointer; transition: all 0.2s;
             font-family: inherit; min-height: 64px; display: flex; align-items: center; justify-content: center;
         }
         .option-btn:hover { background-color: var(--surface-color); border-color: #9aa0a6; }
@@ -295,3 +361,49 @@
             -ms-transform: rotate(45deg);
             transform: rotate(45deg);
         }
+
+        .result-item.correct {
+            border: 2px solid var(--correct-border);
+            background-color: var(--correct-bg);
+        }
+        .result-item.wrong {
+            border: 2px solid var(--wrong-border);
+            background-color: var(--wrong-bg);
+        }
+
+        .segmented-control {
+            display: flex;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .segmented-control .btn-segment {
+            flex: 1;
+            background: white;
+            border: none;
+            padding: 12px 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-family: inherit;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: background-color 0.2s;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .segmented-control .btn-segment:last-child {
+            border-right: none;
+        }
+
+        .segmented-control .btn-segment:hover {
+            background-color: var(--surface-color);
+        }
+
+        .segmented-control .btn-segment.active {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 700;
+        }
+        
