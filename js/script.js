@@ -186,8 +186,8 @@ function toggleAccordion(header) {
 
 function renderCard() {
     const content = document.getElementById('app-content');
-    if (shuffledData.length === 0) {
-        content.innerHTML = `<div class="quiz-container"><div class="quiz-setup" style="text-align:center;"><h2 style="margin-bottom:10px;">카드가 없습니다.</h2><button class="btn" onclick="initCardSetup()">처음으로</button></div></div>`;
+    if (shuffledData.length === 0 || cardIndex >= shuffledData.length) {
+        content.innerHTML = `<div class="quiz-container"><div class="quiz-setup" style="text-align:center;"><h2 style="margin-bottom:10px;">모든 카드를 학습했습니다!</h2><button class="btn" onclick="initCardSetup()">처음으로</button></div></div>`;
         return;
     }
     const item = shuffledData[cardIndex];
@@ -204,10 +204,33 @@ function renderCard() {
                 <button class="btn" onclick="prevCard()" ${cardIndex === 0 ? 'disabled' : ''} style="background:#dadce0; color:#5f6368;">이전</button>
                 <span style="font-weight:500; color:#5f6368; font-size:0.9rem;">${cardIndex + 1} / ${total}</span>
                 <button class="btn" onclick="nextCard()">다음</button>
+                <button class="btn" onclick="markAsUnknown()" style="background:#ffab00;">모르는 단어</button>
                 <button class="btn" onclick="initCardSetup()" style="background:#5f6368;">섞기</button>
             </div>
         </div>`;
     content.innerHTML = html;
+    // Ensure unknown class is removed when a new card is rendered
+    const cardElement = document.getElementById('flashcard');
+    if (cardElement) {
+        cardElement.classList.remove('unknown');
+    }
+}
+
+function markAsUnknown() {
+    const cardElement = document.getElementById('flashcard');
+    if (cardElement) {
+        cardElement.classList.add('unknown');
+    }
+    // Remove the current card and add it to the end
+    const currentCard = shuffledData.splice(cardIndex, 1)[0];
+    shuffledData.push(currentCard);
+    
+    // Add a delay before rendering the next card
+    setTimeout(() => {
+        // If it was the last card, renderCard will show the completion message
+        // Otherwise, it will render the card at the current cardIndex (which is now a new card)
+        renderCard();
+    }, 500); // 500ms delay for visual feedback
 }
 
 function handleCardClick() {
@@ -222,12 +245,8 @@ function handleCardClick() {
 }
 
 function nextCard() {
-    if (cardIndex < shuffledData.length - 1) {
-        cardIndex++;
-        renderCard();
-    } else {
-        alert("마지막 카드입니다!");
-    }
+    cardIndex++;
+    renderCard();
 }
 
 function prevCard() {
