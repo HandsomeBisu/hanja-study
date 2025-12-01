@@ -1,39 +1,87 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hanja - DPS Study</title>
-    <link rel="icon" href="assets/icon.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="style.css">
+<!-- 에널리틱스 부분 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QXH238NLY1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-QXH238NLY1');
+</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>문제가 발생했습니다</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      user-select: none;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
+      background-color: #f2f2f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 700px;
+      padding: 2rem;
+      margin: 0 auto;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(15px);
+      transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+    }
+
+    .container.loaded {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .footer {
+      width: 100%;
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+      color: #888;
+      background-color: #f2f2f7;
+      margin-top: 2rem;
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <h1>Oops!</h1>
+    <h2>문제가 발생했습니다.</h2>
+    <p>Shut down</p>
+    <div class="footer">© DPS Team</div>
+  </div>
 
-<div id="intro-overlay" style="text-align: center;">
-    <img src="assets/logo.png" alt="Logo" id="intro-logo">
-    <p id="intro-text">안녕하세요</p>
-    <p style="font-size: 1em;">© 2025 DPS Dev Team All rights reserved.<br>DPS는 <strong>Don't Play Solo</strong>의 약자입니다.<br><br>DPS Team은 성적의 향상을 보장하지 않습니다.</p>
-</div>
-
-<header>
-    <h1><img src="assets/logo.png" alt="Hanja - DPS Study" id="logo"> <span>Hanja - DPS Study</span></h1>
-</header>
-
-<nav>
-    <button onclick="setMode('list')" id="btn-list" class="active">목록</button>
-    <button onclick="setMode('card')" id="btn-card">카드</button>
-    <button onclick="setMode('quiz')" id="btn-quiz">퀴즈</button>
-</nav>
-
-<main id="app-content">
-    <!-- JavaScript Content -->
-</main>
-
-<script src="js/script.js"></script>
-
+  <script>
+    // Initial load animation
+    window.addEventListener('load', () => {
+      document.querySelector('.container').classList.add('loaded');
+    });
+  </script>
 </body>
 </html>
